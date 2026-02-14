@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Para Yeka: Mi Constante Universal ❤️</title>
+    <meta name="description" content="Una dedicatoria de amor en la era digital.">
+    <link rel="stylesheet" href="style.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&family=Dancing+Script:wght@600&display=swap"
+        rel="stylesheet">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <!-- Placeholder kit, might need updating -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <canvas id="neural-canvas"></canvas>
+
+    <div class="content-wrapper">
+        <header>
+            <h1 class="neon-title glitch" data-text="Para Yeka">Para Yeka</h1>
+            <p class="subtitle">Mi Constante Universal 🌌</p>
+        </header>
+
+        <main>
+            <!-- SECCIÓN 1: EL MENSAJE (AVATAR) -->
+            <section class="glass-card avatar-section">
+                <div class="avatar-container">
+                    <!-- Trigger para Video -->
+                    <div class="video-placeholder" id="open-video-btn" style="cursor: pointer;">
+                        <i class="fa-solid fa-heart-pulse heart-beat"></i>
+                        <p>Mensaje de Amor Cuántico</p>
+                        <p style="font-size: 0.8em; opacity: 0.7;">(Haz clic para ver)</p>
+                    </div>
+                </div>
+                <button id="play-music-btn" class="neon-btn"><i class="fa-solid fa-music"></i> Una canción para
+                    ti</button>
+                <audio id="bg-music" loop>
+                    <source src="assets/Dread_Mar-I_-_Mi_amor_(mp3.pm).mp3" type="audio/mpeg">
+                </audio>
+            </section>
+
+            <!-- VIDEO MODAL (Hidden by default) -->
+            <div id="video-modal" class="lightbox">
+                <span class="lightbox-close" id="close-video-btn">&times;</span>
+                <div class="video-wrapper" style="width: 90%; max-width: 800px;">
+                    <video id="main-video-player" controls
+                        style="width: 100%; border-radius: 10px; border: 2px solid var(--primary-color);">
+                        <source src="assets/video 14 2026.mp4" type="video/mp4">
+                        Tu navegador no soporta el video.
+                    </video>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 2: GENERADOR DE AMOR (IA) -->
+            <section class="glass-card ai-love-section">
+                <h2>🧪 Algoritmo del Corazón</h2>
+                <div class="terminal-output" id="love-reason">
+                    <span class="cursor">_</span> Sistema esperando input...
+                </div>
+                <button id="generate-love-btn" class="neon-btn secondary">
+                    <i class="fa-solid fa-infinity"></i> Calcular Nueva Razón
+                </button>
+            </section>
+
+            <!-- SECCIÓN 3: NUESTRA LÍNEA DE TIEMPO (20 AÑOS) -->
+            <section class="timeline-section">
+                <h2>20 Años de Historia</h2>
+                <div class="timeline">
+                    <div class="container left">
+                        <div class="content">
+                            <h3>El Inicio</h3>
+                            <p>Hace casi 20 años, nuestras vidas se cruzaron.</p>
+                        </div>
+                    </div>
+                    <div class="container right">
+                        <div class="content">
+                            <h3>La Llegada de Juanpi</h3>
+                            <p>Nuestro milagro que pronto cumple 8 años.</p>
+                        </div>
+                    </div>
+                    <div class="container left">
+                        <div class="content">
+                            <h3>Hoy</h3>
+                            <p>Más fuertes, más sabios y más unidos que nunca.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECCIÓN 4: GALERÍA DE RECUERDOS -->
+            <section class="glass-card gallery-section">
+                <h2>Algunos de nuestros momentos</h2>
+                <div class="gallery-grid">
+                    <div class="gallery-item"><img src="assets/20191129_192133.webp" alt="Recuerdo con Yeka"
+                            loading="lazy"></div>
+                    <div class="gallery-item"><img src="assets/20191130_140411.webp" alt="Recuerdo con Yeka"
+                            loading="lazy"></div>
+                    <div class="gallery-item"><img src="assets/20191130_143843.webp" alt="Recuerdo con Yeka"
+                            loading="lazy"></div>
+                    <div class="gallery-item"><img src="assets/20191202_070016.webp" alt="Recuerdo con Yeka"
+                            loading="lazy"></div>
+                    <div class="gallery-item"><img src="assets/20191212_160916.webp" alt="Recuerdo con Yeka"
+                            loading="lazy"></div>
+                    <div class="gallery-item"><img src="assets/20200128_225506.webp" alt="Recuerdo con Yeka"
+                            loading="lazy"></div>
+                    <div class="gallery-item"><img src="assets/20200130_161158.webp" alt="Recuerdo con Yeka"
+                            loading="lazy"></div>
+                    <div class="gallery-item"><img src="assets/20200205_170313.webp" alt="Recuerdo con Yeka"
+                            loading="lazy"></div>
+                    <div class="gallery-item"><img src="assets/IMG-20191113-WA0005.webp" alt="Recuerdo con Yeka"
+                            loading="lazy"></div>
+                    <div class="gallery-item"><img src="assets/IMG-20220213-WA0023.webp" alt="Recuerdo con Yeka"
+                            loading="lazy"></div>
+                    <div class="gallery-item"><img src="assets/IMG-20220929-WA0019.webp" alt="Recuerdo con Yeka"
+                            loading="lazy"></div>
+                    <div class="gallery-item"><img src="assets/IMG_3216.webp" alt="Recuerdo con Yeka" loading="lazy">
+                    </div>
+                    <div class="gallery-item"><img src="assets/IMG_3241.webp" alt="Recuerdo con Yeka" loading="lazy">
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Creado con ❤️ y 🤖 por Juan Pablo & Rojo</p>
+            <p>San Valentín 2026</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
