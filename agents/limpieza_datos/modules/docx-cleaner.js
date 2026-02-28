@@ -1,11 +1,15 @@
 /**
- * 🛡️ EL CHE - Módulo DOCX Cleaner v2.1
- * Limpieza profunda de metadatos emulando "Inspeccionar documento" de Word
+ * 🛡️ docx-cleaner.js - Módulo de Limpieza Profunda v2.2
+ * 
+ * ASPECTOS CRÍTICOS:
+ * 1. REPARACIÓN ZIP: Usa PowerShell para normalizar archivos (evita error "No descriptor present").
+ * 2. TEXTO INVISIBLE: Corrige colores blancos y temas para asegurar legibilidad post-limpieza.
+ * 3. EXHAUSTIVIDAD: Procesa automáticamente todos los XML internos.
  */
 
+const AdmZip = require('adm-zip');
 const fs = require('fs');
 const path = require('path');
-const AdmZip = require('adm-zip');
 
 /**
  * Analiza metadatos de un archivo DOCX
@@ -151,8 +155,23 @@ async function cleanDeep(inputPath, outputPath = null) {
         outputPath = path.join(dir, newName);
     }
 
+    // Normalizar ZIP antes de procesar para evitar "No descriptor present"
     try {
-        const zip = new AdmZip(inputPath);
+        const zipTmpPath = inputPath + '.repair.zip';
+        const zipInPath = inputPath + '.in.zip';
+        fs.copyFileSync(inputPath, zipInPath);
+        const tempUnzip = path.join(path.dirname(inputPath), '_tmp_clean_' + Date.now());
+        // Expandir y re-comprimir como .zip, luego renombrar a .docx
+        const psCmd = `powershell -Command "Expand-Archive -Path '${zipInPath}' -DestinationPath '${tempUnzip}' -Force; Compress-Archive -Path '${tempUnzip}/*' -DestinationPath '${zipTmpPath}' -Force; Remove-Item -Path '${tempUnzip}' -Recurse -Force; Remove-Item -Path '${zipInPath}' -Force"`;
+        require('child_process').execSync(psCmd);
+        if (fs.existsSync(zipTmpPath)) {
+            fs.copyFileSync(zipTmpPath, inputPath);
+            fs.unlinkSync(zipTmpPath);
+        }
+    } catch (e) { /* silent fail, attempt direct */ }
+
+    try {
+        const zip = new AdmZip(fs.readFileSync(inputPath));
         let cleaned = [];
 
         // 1. Propiedades del documento e información personal (core.xml)
@@ -214,16 +233,55 @@ async function cleanDeep(inputPath, outputPath = null) {
         if (zip.getEntry('docProps/custom.xml')) {
             zip.deleteFile('docProps/custom.xml');
             cleaned.push('Propiedades personalizadas');
+            modified = true;
         }
 
         // 7. Borrar thumbnails
         if (zip.getEntry('docProps/thumbnail.jpeg')) {
             zip.deleteFile('docProps/thumbnail.jpeg');
             cleaned.push('Miniatura del documento');
+            modified = true;
         }
 
+        // 8. Corregir textos invisibles (Blanco sobre Blanco) debido a la eliminación de las imágenes de fondo.
+        const entriesToDeWhite = [
+            ...entries.filter(e => e.entryName.endsWith('.xml')).map(e => e.entryName)
+        ];
+
+        entriesToDeWhite.forEach(entryName => {
+            const entry = zip.getEntry(entryName);
+            if (entry) {
+                let content = entry.getData().toString('utf8');
+                let initialContent = content;
+
+                // REGLA AGRESIVA: Eliminar CUALQUIER etiqueta de color para forzar automático (negro)
+                content = content.replace(/<w:color\s+[^>]*\/>/gi, '');
+
+                // REGLA AGRESIVA: Eliminar cualquier etiqueta de resaltado
+                content = content.replace(/<w:highlight\s+[^>]*\/>/gi, '');
+
+                // REGLA AGRESIVA: Eliminar sombreados (fondos) de párrafo y texto, dejarlos transparentes
+                content = content.replace(/<w:shd\s+[^>]*\/>/gi, '<w:shd w:val="clear" w:color="auto" w:fill="auto"/>');
+
+                // VML (Common in older docs/textboxes) - Reset a seguro
+                content = content.replace(/fillcolor="[^"]*"/gi, 'fillcolor="window"');
+                content = content.replace(/color="[^"]*"/gi, 'color="windowtext"');
+                content = content.replace(/strokeColor="[^"]*"/gi, 'strokeColor="windowtext"');
+
+                // DrawingML (Modern textboxes/shapes) - Reset a negro
+                content = content.replace(/<a:srgbClr\s+val="[^"]*"[^>]*\/>/gi, '<a:srgbClr val="000000"/>');
+                content = content.replace(/<a:srgbClr\s+val="[^"]*"[^>]*>/gi, '<a:srgbClr val="000000">');
+                content = content.replace(/<a:schemeClr\s+val="[^"]*"[^>]*\/>/gi, '<a:schemeClr val="tx1"/>');
+
+                if (content !== initialContent) {
+                    zip.updateFile(entryName, Buffer.from(content, 'utf8'));
+                    modified = true;
+                }
+            }
+        });
+
         // Guardar archivo limpio
-        zip.writeZip(outputPath);
+        fs.writeFileSync(outputPath, zip.toBuffer());
 
         return {
             success: true,
@@ -237,8 +295,148 @@ async function cleanDeep(inputPath, outputPath = null) {
     }
 }
 
+/**
+ * Reemplaza texto en el contenido DOCX (cuerpo, encabezados, pies de página)
+ * @param {string} inputPath - Ruta al archivo DOCX
+ * @param {string|RegExp} searchValue - Texto a buscar (string o regex)
+ * @param {string} replaceValue - Texto de reemplazo
+ * @param {string} outputPath - Ruta de salida (opcional)
+ */
+async function replaceText(inputPath, searchValue, replaceValue, outputPath = null) {
+    if (!outputPath) {
+        // Generar nombre por defecto si no se especifica
+        const dir = path.dirname(inputPath);
+        const name = path.basename(inputPath, path.extname(inputPath));
+        outputPath = path.join(dir, `${name}_REPLACED.docx`);
+    }
+
+    // Normalizar ZIP antes de procesar
+    try {
+        const zipTmpPath = inputPath + '.repair_r.zip';
+        const zipInPath = inputPath + '.rin.zip';
+        fs.copyFileSync(inputPath, zipInPath);
+        const tempUnzip = path.join(path.dirname(inputPath), '_tmp_rep_' + Date.now());
+        const psCmd = `powershell -Command "Expand-Archive -Path '${zipInPath}' -DestinationPath '${tempUnzip}' -Force; Compress-Archive -Path '${tempUnzip}/*' -DestinationPath '${zipTmpPath}' -Force; Remove-Item -Path '${tempUnzip}' -Recurse -Force; Remove-Item -Path '${zipInPath}' -Force"`;
+        require('child_process').execSync(psCmd);
+        if (fs.existsSync(zipTmpPath)) {
+            fs.copyFileSync(zipTmpPath, inputPath);
+            fs.unlinkSync(zipTmpPath);
+        }
+    } catch (e) { /* silent fail */ }
+
+    try {
+        const zip = new AdmZip(fs.readFileSync(inputPath));
+        let modifiedCount = 0;
+
+        // Archivos XML a procesar
+        const targetPatterns = [
+            'word/document.xml',       // Cuerpo (standard)
+            'word\\document.xml',      // Cuerpo (powershell zip)
+            /^word[\\\/]header\d+\.xml$/,  // Encabezados
+            /^word[\\\/]footer\d+\.xml$/   // Pies de página
+        ];
+
+        const entries = zip.getEntries();
+        const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+        // Preparar Regex para búsqueda global e insensible a mayúsculas
+        let searchRegex;
+        if (searchValue instanceof RegExp) {
+            searchRegex = searchValue;
+        } else {
+            searchRegex = new RegExp(escapeRegExp(searchValue), 'gi'); // Case insensitive global
+        }
+
+        entries.forEach(entry => {
+            let isTarget = false;
+            for (const pattern of targetPatterns) {
+                if (pattern instanceof RegExp) {
+                    if (pattern.test(entry.entryName)) isTarget = true;
+                } else {
+                    if (entry.entryName === pattern) isTarget = true;
+                }
+            }
+
+            if (isTarget) {
+                let content = entry.getData().toString('utf8');
+                // Buscar si hay coincidencias
+                if (searchRegex.test(content)) {
+                    // Reemplazo
+                    const newContent = content.replace(searchRegex, replaceValue);
+                    zip.updateFile(entry.entryName, Buffer.from(newContent, 'utf8'));
+                    modifiedCount++;
+                }
+            }
+        });
+
+        if (modifiedCount > 0) {
+            fs.writeFileSync(outputPath, zip.toBuffer());
+            return { success: true, modified: true, outputPath, matches: modifiedCount };
+        } else {
+            // Si no hubo cambios, copiar el archivo original al destino
+            if (inputPath !== outputPath) {
+                // Escribir buffer para asegurar seguridad in situ
+                fs.writeFileSync(outputPath, zip.toBuffer());
+            }
+            return { success: true, modified: false, outputPath, matches: 0 };
+        }
+
+    } catch (err) {
+        return { success: false, error: err.message };
+    }
+}
+
+/**
+ * Elimina completamente encabezados y pies de página (útil para quitar marcas de agua/logos)
+ * @param {string} inputPath 
+ * @param {string} outputPath 
+ */
+async function removeHeaders(inputPath, outputPath = null) {
+    if (!outputPath) {
+        const dir = path.dirname(inputPath);
+        const name = path.basename(inputPath, path.extname(inputPath));
+        outputPath = path.join(dir, `${name}_NO_HEADERS.docx`);
+    }
+
+    try {
+        const zip = new AdmZip(fs.readFileSync(inputPath));
+        const entries = zip.getEntries();
+        let modified = false;
+
+        // XML vacío válido para header/footer
+        const emptyXML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:pPr><w:pStyle w:val="Header"/></w:pPr></w:p></w:hdr>';
+        const emptyFooterXML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:pPr><w:pStyle w:val="Footer"/></w:pPr></w:p></w:ftr>';
+
+        // Imagen 1x1 pixel PNG transparente y vacía para destruir logos sin corromper el zip
+        const emptyPng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64');
+
+        entries.forEach(entry => {
+            const name = entry.entryName;
+
+            // Detectar y vaciar headers
+            if (/^word[\\\/]header\d+\.xml$/.test(name)) {
+                zip.updateFile(name, Buffer.from(emptyXML, 'utf8'));
+                modified = true;
+            }
+            // Detectar y vaciar footers
+            if (/^word[\\\/]footer\d+\.xml$/.test(name)) {
+                zip.updateFile(name, Buffer.from(emptyFooterXML, 'utf8'));
+                modified = true;
+            }
+        });
+
+        fs.writeFileSync(outputPath, zip.toBuffer());
+        return { success: true, modified: modified, outputPath };
+
+    } catch (err) {
+        return { success: false, error: err.message };
+    }
+}
+
 module.exports = {
     analyzeMetadata,
     cleanDeep,
-    cleanFileName
+    cleanFileName,
+    replaceText,
+    removeHeaders
 };

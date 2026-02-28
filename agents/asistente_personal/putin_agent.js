@@ -35,6 +35,9 @@ async function sendEmailAsPutin(target, subject, text, html, attachmentPath = nu
         }
     }
 
+    // Normalizar correo (manejar "arroba" y espacios)
+    targetEmail = targetEmail.replace(/\s*arroba\s*/gi, '@').replace(/\s*punto\s*/gi, '.').trim();
+
     // Validación de formato de correo simple
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(targetEmail)) {
@@ -119,6 +122,30 @@ if (require.main === module) {
     if (action === 'read_inbox') {
         getInboxSummary(5).then(res => {
             console.log(res);
+        });
+    } else if (action === 'send_report') {
+        const target = process.argv[3];
+        const reportBody = `
+            <h3>📋 Ecosistema de Agentes de Juan Pablo</h3>
+            <p>Aquí tienes el detalle de los especialistas que componen tu Orquesta:</p>
+            <ul>
+                <li><strong>🍎 Fidel (Pedagogo):</strong> Genera guías, actividades y evaluaciones basadas en el currículum chileno. Ubicado en <code>depositos_materiales/</code>.</li>
+                <li><strong>🛡️ El Che (Custodio):</strong> Sanitiza archivos Word, elimina metadatos y asegura la privacidad antes de la venta.</li>
+                <li><strong>🚀 Lenin (Publicador):</strong> Sube materiales limpios a ProfeSocial, configura precios y descripciones.</li>
+                <li><strong>📊 Stalin (Estratega Curricular):</strong> Analiza Google Drive y repositorios para identificar brechas de contenido.</li>
+                <li><strong>📈 Xi Jinping (Marketing):</strong> Investiga ProfeSocial para detectar materiales más vendidos y sugiere títulos de alta conversión.</li>
+                <li><strong>📧 Putin (Nexo):</strong> Monitor de email, filtrado de urgencias y asistente de agenda personal.</li>
+                <li><strong>🧾 Marx (Contador):</strong> Extrae datos de imágenes de boletas y gestiona el registro de adquisiciones.</li>
+                <li><strong>📝 Mao (Diseñador Insights):</strong> Diseña encuestas psicosociales y educativas con dashboards estéticos.</li>
+                <li><strong>🌐 Ho Chi Minh (Arquitecto Web):</strong> Transforma datos de Excel en páginas web responsivas.</li>
+                <li><strong>🤝 Allende (Soporte CRM):</strong> Atiende usuarios y gestiona el pipeline en Google Sheets.</li>
+            </ul>
+            <p><strong>Rojo</strong> es tu Comandante de Comunicaciones y quien orquesta a todos estos especialistas.</p>
+        `;
+
+        const memoryPath = path.join(__dirname, '../../MEMORY.md');
+        sendEmailAsPutin(target, "Reporte Detallado de Agentes Especialistas", "Reporte de Agentes", reportBody, memoryPath).then(res => {
+            console.log(res ? '📧 Reporte enviado correctamente con adjunto MEMORY.md.' : '❌ Error al enviar reporte.');
         });
     } else if (action === 'send') {
         // Formato: send "alias/email" "subject" "body" "attachmentPath"

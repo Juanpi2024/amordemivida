@@ -1,0 +1,303 @@
+@import "tailwindcss";
+
+
+:root {
+  /* WC3 Core Palette */
+  --wc3-bg: #0a0c10;
+  --wc3-panel: #13161c;
+  --wc3-panel-light: #1a1e27;
+  --wc3-gold: #c8aa6e;
+  --wc3-gold-bright: #f0d070;
+  --wc3-gold-dark: #8a6d3b;
+  --wc3-green: #00ff66;
+  --wc3-green-dark: #1a7a3a;
+  --wc3-blue-mana: #4488ff;
+  --wc3-red: #cc2200;
+  --wc3-red-dark: #5a1a1a;
+  --wc3-parchment: #d4b896;
+  --wc3-stone: #2a2d35;
+  --wc3-stone-dark: #1a1c22;
+  --wc3-wood: #3d2b1f;
+  --wc3-wood-light: #5a3d2a;
+  --wc3-text: #c0b090;
+  --wc3-text-dim: #706850;
+
+  --background: var(--wc3-bg);
+  --foreground: var(--wc3-text);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-wc3-bg: var(--wc3-bg);
+  --color-wc3-panel: var(--wc3-panel);
+  --color-wc3-panel-light: var(--wc3-panel-light);
+  --color-wc3-gold: var(--wc3-gold);
+  --color-wc3-gold-bright: var(--wc3-gold-bright);
+  --color-wc3-gold-dark: var(--wc3-gold-dark);
+  --color-wc3-green: var(--wc3-green);
+  --color-wc3-green-dark: var(--wc3-green-dark);
+  --color-wc3-blue: var(--wc3-blue-mana);
+  --color-wc3-red: var(--wc3-red);
+  --color-wc3-red-dark: var(--wc3-red-dark);
+  --color-wc3-parchment: var(--wc3-parchment);
+  --color-wc3-stone: var(--wc3-stone);
+  --color-wc3-stone-dark: var(--wc3-stone-dark);
+  --color-wc3-wood: var(--wc3-wood);
+  --color-wc3-wood-light: var(--wc3-wood-light);
+  --color-wc3-text: var(--wc3-text);
+  --color-wc3-text-dim: var(--wc3-text-dim);
+
+  --font-title: 'Cinzel', serif;
+  --font-body: 'Crimson Text', serif;
+  --font-mono: 'Courier New', monospace;
+}
+
+body {
+  background-color: var(--wc3-bg);
+  color: var(--wc3-text);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* ========================================
+   WARCRAFT 3 — UI COMPONENTS
+   ======================================== */
+
+/* Ornate Panel — dark stone with gold double-border */
+.wc3-panel {
+  background: linear-gradient(180deg, var(--wc3-panel) 0%, var(--wc3-stone-dark) 100%);
+  border: 2px solid var(--wc3-gold-dark);
+  box-shadow:
+    inset 0 0 0 1px rgba(200, 170, 110, 0.15),
+    inset 0 1px 0 rgba(200, 170, 110, 0.1),
+    0 4px 20px rgba(0, 0, 0, 0.6);
+  position: relative;
+}
+
+.wc3-panel::before {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border: 1px solid rgba(200, 170, 110, 0.08);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Gold ornate frame */
+.wc3-frame {
+  border: 3px solid var(--wc3-gold-dark);
+  box-shadow:
+    inset 0 0 0 1px rgba(200, 170, 110, 0.2),
+    inset 0 0 20px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(0, 0, 0, 0.8),
+    0 4px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Action button (like WC3 command card buttons) */
+.wc3-btn {
+  background: linear-gradient(180deg, #2a2520 0%, #1a1815 60%, #0d0b09 100%);
+  border: 2px solid var(--wc3-gold-dark);
+  color: var(--wc3-gold);
+  font-family: 'Cinzel', serif;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 10px;
+  font-weight: 700;
+  transition: all 0.15s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.wc3-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(200, 170, 110, 0.1) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.wc3-btn:hover {
+  border-color: var(--wc3-gold);
+  color: var(--wc3-gold-bright);
+  box-shadow: 0 0 15px rgba(200, 170, 110, 0.2), inset 0 0 15px rgba(200, 170, 110, 0.05);
+}
+
+.wc3-btn:hover::before {
+  opacity: 1;
+}
+
+.wc3-btn:active {
+  transform: scale(0.96);
+  border-color: var(--wc3-gold-bright);
+}
+
+/* Danger button */
+.wc3-btn-danger {
+  border-color: var(--wc3-red-dark);
+  color: var(--wc3-red);
+}
+
+.wc3-btn-danger:hover {
+  border-color: var(--wc3-red);
+  color: #ff4444;
+  box-shadow: 0 0 15px rgba(204, 34, 0, 0.3), inset 0 0 15px rgba(204, 34, 0, 0.05);
+}
+
+/* HP Bar */
+.wc3-bar {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(200, 170, 110, 0.3);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.wc3-bar-fill-green {
+  background: linear-gradient(180deg, #44ee66 0%, #22aa44 50%, #118833 100%);
+  box-shadow: 0 0 6px rgba(0, 255, 102, 0.4);
+}
+
+.wc3-bar-fill-blue {
+  background: linear-gradient(180deg, #6699ff 0%, #3366cc 50%, #224499 100%);
+  box-shadow: 0 0 6px rgba(68, 136, 255, 0.4);
+}
+
+.wc3-bar-fill-gold {
+  background: linear-gradient(180deg, var(--wc3-gold-bright) 0%, var(--wc3-gold) 50%, var(--wc3-gold-dark) 100%);
+  box-shadow: 0 0 6px rgba(200, 170, 110, 0.5);
+}
+
+.wc3-bar-fill-red {
+  background: linear-gradient(180deg, #ff4444 0%, #cc2200 50%, #881100 100%);
+  box-shadow: 0 0 6px rgba(204, 34, 0, 0.4);
+}
+
+/* Minimap frame */
+.wc3-minimap-frame {
+  background: var(--wc3-stone-dark);
+  border: 3px solid var(--wc3-gold-dark);
+  box-shadow:
+    inset 0 0 30px rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(0, 0, 0, 0.9);
+}
+
+/* Tooltip */
+.wc3-tooltip {
+  background: rgba(10, 12, 16, 0.95);
+  border: 1px solid var(--wc3-gold-dark);
+  color: var(--wc3-gold);
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  padding: 6px 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+}
+
+/* Parchment scroll look for modals */
+.wc3-scroll {
+  background: linear-gradient(180deg, #1a1815 0%, #13110e 100%);
+  border: 3px solid var(--wc3-gold-dark);
+  box-shadow:
+    inset 0 0 0 1px rgba(200, 170, 110, 0.12),
+    inset 0 0 40px rgba(0, 0, 0, 0.5),
+    0 8px 40px rgba(0, 0, 0, 0.7);
+}
+
+/* Chat console */
+.wc3-console {
+  background: rgba(0, 0, 0, 0.75);
+  border: 2px solid var(--wc3-gold-dark);
+  font-family: 'Courier New', monospace;
+  color: var(--wc3-green);
+}
+
+/* Glowing unit ring */
+@keyframes unitPulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 8px rgba(0, 255, 102, 0.4), inset 0 0 4px rgba(0, 255, 102, 0.1);
+  }
+
+  50% {
+    box-shadow: 0 0 16px rgba(0, 255, 102, 0.7), inset 0 0 8px rgba(0, 255, 102, 0.2);
+  }
+}
+
+@keyframes unitPulseError {
+
+  0%,
+  100% {
+    box-shadow: 0 0 8px rgba(204, 34, 0, 0.4), inset 0 0 4px rgba(204, 34, 0, 0.1);
+  }
+
+  50% {
+    box-shadow: 0 0 16px rgba(204, 34, 0, 0.7), inset 0 0 8px rgba(204, 34, 0, 0.2);
+  }
+}
+
+@keyframes goldShimmer {
+  0% {
+    background-position: -200% center;
+  }
+
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.animate-unit-pulse {
+  animation: unitPulse 2s ease-in-out infinite;
+}
+
+.animate-unit-error {
+  animation: unitPulseError 1s ease-in-out infinite;
+}
+
+.animate-gold-shimmer {
+  background-size: 200% 100%;
+  animation: goldShimmer 3s linear infinite;
+}
+
+/* Fog of War gradient */
+.fog-of-war {
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at center, transparent 40%, rgba(10, 12, 16, 0.6) 70%, rgba(10, 12, 16, 0.95) 100%);
+}
+
+/* Terrain grid */
+.wc3-terrain {
+  background-color: #0f1a12;
+  background-image:
+    linear-gradient(rgba(200, 170, 110, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200, 170, 110, 0.04) 1px, transparent 1px);
+  background-size: 80px 80px;
+}
+
+/* Scrollbar — WC3 style */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--wc3-stone-dark);
+  border-left: 1px solid var(--wc3-gold-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--wc3-gold-dark) 0%, var(--wc3-wood) 100%);
+  border: 1px solid var(--wc3-gold-dark);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--wc3-gold);
+}
+
+/* Selection color */
+::selection {
+  background: rgba(200, 170, 110, 0.3);
+  color: var(--wc3-gold-bright);
+}

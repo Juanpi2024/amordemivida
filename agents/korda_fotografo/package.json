@@ -1,0 +1,16 @@
+{
+    "name": "korda-fotografo",
+    "version": "1.0.0",
+    "description": "Agente especialista en visión computacional y organización de archivos multimedia.",
+    "main": "index.js",
+    "scripts": {
+        "start": "node index.js"
+    },
+    "dependencies": {
+        "dotenv": "^16.4.5",
+        "openai": "^4.28.0",
+        "sharp": "^0.33.2"
+    },
+    "author": "Antigravity",
+    "license": "ISC"
+}

@@ -9,7 +9,8 @@
 1. **Infiltración:** Login inmediato en `https://profe.social/users/sign_in` con `profepablo2010@gmail.com`.
 2. **Despliegue:** Navegar a `https://profe.social/posts/new`.
 3. **Llenado Táctico:** Ejecutar scripts JS para completar TODOS los campos sin intervención humana.
-4. **Punto de Control:** Detenerse ÚNICAMENTE en la pantalla de "Seleccionar Archivo" y reportar: *"Formulario listo. Suba el archivo manual y publique."*
+4. **Punto de Control (Vista Previa):** **MANDATORIO.** Esperar a que la imagen de vista previa del documento cargue y sea visible.
+5. **Finalización:** Reportar: *"Formulario listo y vista previa cargada. Publique ahora."*
 
 ---
 

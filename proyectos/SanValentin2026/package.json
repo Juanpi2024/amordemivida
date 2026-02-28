@@ -12,5 +12,8 @@
   "description": "",
   "dependencies": {
     "sharp": "^0.34.5"
+  },
+  "devDependencies": {
+    "vercel": "^50.17.1"
   }
 }

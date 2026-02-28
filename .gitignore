@@ -28,6 +28,7 @@ temp_audio/
 temp_*.docx
 work_file.docx
 *_temp.docx
+*.docx
 
 # Image temp files (generated during execution)
 qr_code.png
@@ -82,3 +83,31 @@ build/
 *.env
 .env.*
 
+# ============================================
+# AGENT TEMP / DEBUG FILES
+# ============================================
+# Imágenes generadas por Playwright o debug
+*.png
+# Archivos de sesión y cache
+auth_*.json
+published_*.json
+browser_sessions/
+# Carpetas temporales de extracción
+temp_cleaned/
+temp_pablo/
+temp_test/
+outputs/
+# Scripts sueltos de utilidades de un solo uso
+patch_*.js
+dump_*.js
+test_*.js
+clean_planificaciones_*.js
+# Archivos XML extraidos
+*.xml
+doc_raw.xml
+doc_limpio.xml
+styles_raw.xml
+
+# Contactos y base de datos locales
+contacts.json
+whatsapp_contacts.json
