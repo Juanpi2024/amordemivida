@@ -4,12 +4,26 @@ import fs from 'fs';
 import path from 'path';
 
 export async function GET() {
-    const AGENTS_DIR = 'C:\\Users\\Casa\\clawd\\agents';
+    let AGENTS_DIR = path.resolve(process.cwd(), '../../agents');
+    
+    // Check fallback absolute paths if relative doesn't resolve
+    if (!fs.existsSync(AGENTS_DIR)) {
+        const fallbackPaths = [
+            'D:\\antigravity\\clawd\\agents',
+            'C:\\Users\\Casa\\clawd\\agents'
+        ];
+        for (const p of fallbackPaths) {
+            if (fs.existsSync(p)) {
+                AGENTS_DIR = p;
+                break;
+            }
+        }
+    }
 
     try {
         // Check if we are in a local environment where the path exists
         if (!fs.existsSync(AGENTS_DIR)) {
-            throw new Error('Local agents directory not found (likely running on Vercel)');
+            throw new Error(`Local agents directory not found at: ${AGENTS_DIR}`);
         }
 
         const folders = fs.readdirSync(AGENTS_DIR, { withFileTypes: true })
@@ -24,36 +38,54 @@ export async function GET() {
             let role = 'Agent';
             let status = 'idle';
 
-            // Try to read IDENTITY.md for better name/role
+             // Try to read IDENTITY.md for better name/role/emoji
+            let emoji = '';
             if (fs.existsSync(identityPath)) {
                 try {
                     const content = fs.readFileSync(identityPath, 'utf-8');
-                    const roleMatch = content.match(/Role:\s*(.*)/i);
+                    
+                    // Name match: e.g. - **Nombre:** Rojo or Name: Rojo
+                    const nameMatch = content.match(/(?:Nombre|Nombre clave):\s*(?:\*\*)?([^\*\n\r]+)(?:\*\*)?/i) || content.match(/# (?:IDENTITY\.md - )?([^\n\r]+)/i);
+                    if (nameMatch) name = nameMatch[1].trim();
+                    
+                    // Role match: e.g. - **Rol:** Especialista or Role: Especialista
+                    const roleMatch = content.match(/(?:Role|Rol|Misión):\s*(?:\*\*)?([^\*\n\r]+)(?:\*\*)?/i);
                     if (roleMatch) role = roleMatch[1].trim();
+
+                    // Emoji match: e.g. - **Emoji:** 🚀 or Emoji: 🚀
+                    const emojiMatch = content.match(/(?:Emoji):\s*(?:\*\*)?([^\*\n\r]+)(?:\*\*)?/i);
+                    if (emojiMatch) emoji = emojiMatch[1].trim();
                 } catch (e) {
                     console.warn(`Could not read identity for ${folderName}`, e);
                 }
             }
 
-            // Check for activity in the last 10 minutes
-            const filesToCheck = ['output.log', 'output_real.txt', 'test_output.txt', 'index.js'];
+            // Check for activity in the last 15 minutes by scanning folder files
             let lastModified = 0;
-
-            filesToCheck.forEach(f => {
-                const p = path.join(folderPath, f);
-                if (fs.existsSync(p)) {
-                    try {
-                        const stats = fs.statSync(p);
-                        if (stats.mtimeMs > lastModified) lastModified = stats.mtimeMs;
-                    } catch (e) {
-                        console.warn(`Could not stat file ${p}`, e);
-                    }
+            try {
+                if (fs.existsSync(folderPath)) {
+                    const files = fs.readdirSync(folderPath);
+                    files.forEach(f => {
+                        if (f !== 'node_modules' && f !== '.git' && !f.endsWith('.md')) {
+                            const p = path.join(folderPath, f);
+                            try {
+                                const stats = fs.statSync(p);
+                                if (stats.isFile() && stats.mtimeMs > lastModified) {
+                                    lastModified = stats.mtimeMs;
+                                }
+                            } catch (err) {
+                                // Ignore file stat errors
+                            }
+                        }
+                    });
                 }
-            });
+            } catch (e) {
+                console.warn(`Could not check activity for ${folderName}`, e);
+            }
 
             const now = Date.now();
 
-            if (lastModified > 0 && (now - lastModified) < 10 * 60 * 1000) { // 10 mins
+            if (lastModified > 0 && (now - lastModified) < 15 * 60 * 1000) { // 15 mins
                 status = 'working';
             }
 
@@ -62,6 +94,7 @@ export async function GET() {
                 name,
                 role,
                 status,
+                emoji,
                 lastActive: lastModified,
             };
         });

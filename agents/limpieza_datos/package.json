@@ -1,6 +1,8 @@
 {
   "dependencies": {
     "adm-zip": "^0.5.10",
-    "docx": "^9.5.1"
+    "docx": "^9.5.1",
+    "dotenv": "^17.3.1",
+    "openai": "^6.33.0"
   }
 }

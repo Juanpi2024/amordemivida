@@ -40,9 +40,34 @@ export default function InstructionsPanel({ isOpen, onClose }: InstructionsPanel
         // Simulate response
         setTimeout(() => {
             const responseTime = new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const lowInput = input.toLowerCase();
+            let responseText = `Orden recibida: "${input}". Transmitiendo a la Orquesta...`;
+
+            if (lowInput.includes('rojo') || lowInput.includes('fidel')) {
+                responseText = '[Rojo]: "¡Recibido, Comandante! Coordinando el frente táctico. ¡Hasta la victoria siempre! Venceremos." ✊';
+            } else if (lowInput.includes('pepe') || lowInput.includes('mujica')) {
+                responseText = '[Pepe Mujica]: "Entendido. Vamos a humanizar estas palabras con calma. Vivir liviano de equipaje, mi amigo. Un abrazo." 🕊️';
+            } else if (lowInput.includes('lenin') || lowInput.includes('publica')) {
+                responseText = '[Lenin]: "¡Lanzamiento iniciado! Corriendo Puppeteer/Playwright para subir material a ProfeSocial a 6 ProfeCoins." 🚀';
+            } else if (lowInput.includes('stalin') || lowInput.includes('che') || lowInput.includes('limpia')) {
+                responseText = '[Stalin/Che]: "Custodio de privacidad al habla. Sanitizando archivos Word de metadatos, comentarios y autores." 🛡️';
+            } else if (lowInput.includes('putin') || lowInput.includes('nexo') || lowInput.includes('correo')) {
+                responseText = '[Putin]: "Inteligencia activa. Escaneando IMAP de correo para buscar prioridades de colegios e ingresos." 📧';
+            } else if (lowInput.includes('keynote') || lowInput.includes('powerpoint') || lowInput.includes('presenta')) {
+                responseText = '[Keynote]: "Inicializando PowerPoint COM Automation. Generando láminas y exportando a PDF de forma nativa." 📊';
+            } else if (lowInput.includes('allende') || lowInput.includes('crm') || lowInput.includes('soporte')) {
+                responseText = '[Allende]: "Atendiendo al pueblo docente. Actualizando pipeline de Google Sheets y correos empáticos." 🤝';
+            } else if (lowInput.includes('xi') || lowInput.includes('jinping') || lowInput.includes('boleta') || lowInput.includes('finanza')) {
+                responseText = '[Xi Jinping]: "Boletas detectadas. Extrayendo montos vía OCR computacional e ingresando al Excel financiero." 🧾';
+            } else if (lowInput.includes('chavez') || lowInput.includes('marketing') || lowInput.includes('facebook')) {
+                responseText = '[Chávez]: "¡Aló Presidente! Autenticando Meta Business para la campaña masiva en redes sociales." 📢';
+            } else if (lowInput.includes('leo') || lowInput.includes('juego') || lowInput.includes('gamific')) {
+                responseText = '[Leo]: "Cargando motor de aventuras Érase una vez... Misiones interactivas y 6 minijuegos en posición." 🎮';
+            }
+
             setLogs(prev => [
                 ...prev,
-                { time: responseTime, text: `Orden recibida: "${input}". Transmitiendo a la Orquesta...`, type: 'response' },
+                { time: responseTime, text: responseText, type: 'response' },
             ]);
         }, 800);
 

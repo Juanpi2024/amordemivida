@@ -20,11 +20,11 @@ interface CommandMapProps {
 
 const getRoleIcon = (role: string) => {
     const r = role.toLowerCase();
-    if (r.includes('comunic') || r.includes('chat') || r.includes('mago')) return <Wand2 className="w-5 h-5 text-wc3-blue" />;
-    if (r.includes('asistente') || r.includes('personal') || r.includes('defens')) return <Shield className="w-5 h-5 text-wc3-green" />;
-    if (r.includes('dev') || r.includes('code') || r.includes('guerr')) return <Sword className="w-5 h-5 text-wc3-red" />;
+    if (r.includes('comunic') || r.includes('chat') || r.includes('mago') || r.includes('propaganda') || r.includes('public')) return <Wand2 className="w-5 h-5 text-wc3-blue" />;
+    if (r.includes('asistente') || r.includes('personal') || r.includes('defens') || r.includes('inbox') || r.includes('crm') || r.includes('soporte')) return <Shield className="w-5 h-5 text-wc3-green" />;
+    if (r.includes('dev') || r.includes('code') || r.includes('guerr') || r.includes('present') || r.includes('powerpoint')) return <Sword className="w-5 h-5 text-wc3-red" />;
     if (r.includes('db') || r.includes('data') || r.includes('anal')) return <Database className="w-5 h-5 text-wc3-blue" />;
-    if (r.includes('financi') || r.includes('gestor')) return <Gem className="w-5 h-5 text-wc3-gold" />;
+    if (r.includes('financi') || r.includes('gestor') || r.includes('contad')) return <Gem className="w-5 h-5 text-wc3-gold" />;
     return <Cpu className="w-5 h-5 text-wc3-gold" />;
 };
 
@@ -142,7 +142,7 @@ export default function CommandMap({ agents, selectedAgent, onSelectAgent }: Com
                             {/* Name tag */}
                             <div className={`absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-center transition-opacity ${isSelected || isHovered ? 'opacity-100' : 'opacity-70'}`}>
                                 <span className="text-[8px] font-bold text-wc3-gold uppercase tracking-wider px-1.5 py-0.5 bg-black/60 rounded" style={{ fontFamily: 'var(--font-cinzel)' }}>
-                                    {agent.name.split('_').pop()}
+                                    {agent.name.split(/[\s_]+/).pop()}
                                 </span>
                             </div>
 

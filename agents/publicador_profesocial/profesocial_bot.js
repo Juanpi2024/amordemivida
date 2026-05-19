@@ -109,9 +109,9 @@ const PASSWORD = process.env.PROFESOCIAL_PASSWORD;
             await page.setInputFiles('input[name="post[file]"]', filePath);
             console.log('   ✓ Archivo cargado correctamente');
 
-            // 7.1 ESPERA TÁCTICA PARA VISTA PREVIA (Solicitado por el usuario: 40s)
-            console.log('⏳ Esperando 40 segundos para la generación de la vista previa...');
-            await page.waitForTimeout(40000);
+            // 7.1 ESPERA TÁCTICA PARA VISTA PREVIA (Solicitado por el usuario: 60s)
+            console.log('⏳ Esperando 60 segundos para la generación de la vista previa...');
+            await page.waitForTimeout(60000);
             console.log('   ✓ Tiempo de espera finalizado.');
         } else if (filePath) {
             console.error(`⚠️ Archivo no encontrado en: ${filePath}`);

@@ -1,151 +1,266 @@
-import './style.css'
+/**
+ * CEIA Juanita Zúñiga - Protocol Management System
+ * Features: Dynamic card generation, search, external links, loading states, accessibility
+ */
 
-let protocolsData = null;
+const ProtocolApp = {
+    state: {
+        data: null,
+        activeProtocolKey: null,
+        isModalOpen: false,
+        isLoading: true
+    },
 
-async function loadData() {
-    try {
-        const response = await fetch('./data/protocolos.json');
-        protocolsData = await response.json();
-    } catch (error) {
-        console.error('Error loading data:', error);
-    }
-}
+    ui: {
+        modalOverlay: null,
+        modalContent: null,
+        body: null,
+        protocolContainer: null
+    },
 
-const modalOverlay = document.getElementById('modal-overlay');
-const modalContent = document.getElementById('modal-content');
-const modalClose = document.getElementById('modal-close');
+    async init() {
+        this.cacheUI();
+        await this.loadData();
+        this.renderCards();
+        this.bindEvents();
+        this.updateURLFromHash();
+    },
 
-function openModal(key) {
-    if (!protocolsData) return;
-    
-    const data = key === 'telefonos' ? protocolsData.protocolo_telefonos : protocolsData.protocolo_camaras;
-    
-    let html = `
-        <div class="header">
-            <div class="badge">Protocolo Oficial CEIA 2026</div>
-            <h1>${data.titulo}</h1>
-        </div>
+    cacheUI() {
+        this.ui.modalOverlay = document.getElementById('modal-overlay');
+        this.ui.modalContent = document.getElementById('modal-content');
+        this.ui.body = document.body;
+        this.ui.protocolContainer = document.getElementById('protocol-container');
+    },
 
-        <div class="modal-body-scroll">
-            <section class="section-card">
-                <h2 class="section-title">⚖️ Marco Normativo</h2>
-                <p class="content-text">${data.marco_legal}</p>
-            </section>
+    async loadData() {
+        this.state.isLoading = true;
+        this.renderLoading();
+        try {
+            const response = await fetch('./data/protocolos.json');
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            this.state.data = await response.json();
+            this.validateData();
+        } catch (error) {
+            console.error('Error loading protocols:', error);
+            this.renderError(error.message);
+        } finally {
+            this.state.isLoading = false;
+        }
+    },
 
-            <section class="section-card">
-                <h2 class="section-title">🎯 Objetivo</h2>
-                <p class="content-text">${data.objetivo}</p>
-            </section>
+    validateData() {
+        if (!this.state.data || typeof this.state.data !== 'object') {
+            throw new Error('Invalid data structure');
+        }
+    },
 
-            ${data.introduccion ? `
-            <section class="section-card">
-                <h2 class="section-title">📝 Introducción</h2>
-                <p class="content-text">${data.introduccion}</p>
-            </section>` : ''}
-    `;
-
-    if (key === 'telefonos') {
-        html += `
-            <section class="section-card">
-                <h2 class="section-title">💡 Excepciones Autorizadas</h2>
-                <div class="highlight-grid">
-                    ${data.excepciones.map(ex => `
-                        <div class="highlight-item">
-                            <h4>${ex.titulo}</h4>
-                            <p>${ex.descripcion}</p>
-                        </div>
-                    `).join('')}
-                </div>
-            </section>
-
-            <section class="section-card">
-                <h2 class="section-title">⏰ Horarios de Uso (Recreos)</h2>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Jornada Mañana</th>
-                            <th>Jornada Tarde</th>
-                            <th>Vespertina</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>${data.horarios_permitidos.mañana.join('<br>')}</td>
-                            <td>${data.horarios_permitidos.tarde.join('<br>')}</td>
-                            <td>${data.horarios_permitidos.vespertina.join('<br>')}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </section>
-
-            <section class="section-card">
-                <h2 class="section-title">⚠️ Medidas Disciplinarias</h2>
-                <div class="highlight-grid">
-                    ${data.medidas_disciplinarias.map(m => `
-                        <div class="highlight-item">
-                            <h4 style="color: var(--warning)">${m.falta}</h4>
-                            <p>${m.acciones}</p>
-                        </div>
-                    `).join('')}
-                </div>
-            </section>
+    renderLoading() {
+        if (!this.ui.protocolContainer) return;
+        this.ui.protocolContainer.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 3rem;">
+                <div style="font-size: 2rem; margin-bottom: 1rem;">⏳</div>
+                <p>Cargando protocolos...</p>
+            </div>
         `;
-    } else {
-        html += `
-            <section class="section-card">
-                <h2 class="section-title">📍 Ubicaciones Monitoreadas</h2>
-                <div class="highlight-grid">
-                    ${data.ubicaciones_autorizadas.map(u => `
-                        <div class="highlight-item">
-                            <p>${u}</p>
-                        </div>
-                    `).join('')}
-                </div>
-            </section>
+    },
 
-            <section class="section-card">
-                <h2 class="section-title">🔒 Custodia y Resguardo</h2>
-                <div class="highlight-item">
-                    <h4>Responsables</h4>
-                    <p>${data.custodia.responsables.join(', ')}</p>
-                </div>
-                <div class="highlight-item" style="margin-top: 1rem;">
-                    <h4>Plazo de Almacenamiento</h4>
-                    <p>${data.custodia.almacenamiento}</p>
-                </div>
-            </section>
-
-            <section class="section-card">
-                <h2 class="section-title">🚫 Restricciones</h2>
-                <div class="highlight-grid">
-                    ${data.restricciones_uso.map(r => `
-                        <div class="highlight-item" style="border-left: 4px solid var(--danger)">
-                            <p>${r}</p>
-                        </div>
-                    `).join('')}
-                </div>
-            </section>
+    renderError(message) {
+        if (!this.ui.protocolContainer) return;
+        this.ui.protocolContainer.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 3rem; background: #fee; border-radius: 12px;">
+                <div style="font-size: 2rem; margin-bottom: 1rem;">❌</div>
+                <p style="color: #c00;">Error al cargar los protocolos: ${this.escapeHtml(message)}</p>
+                <button onclick="location.reload()" style="margin-top: 1rem; padding: 0.8rem 2rem; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer;">Reintentar</button>
+            </div>
         `;
+    },
+
+    escapeHtml(text) {
+        if (typeof text !== 'string') return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    },
+
+    renderCards() {
+        if (!this.ui.protocolContainer || !this.state.data) return;
+        
+        this.ui.protocolContainer.innerHTML = '';
+        
+        Object.entries(this.state.data).forEach(([key, protocol]) => {
+            const card = document.createElement('article');
+            card.className = 'protocol-card';
+            card.setAttribute('role', 'button');
+            card.setAttribute('tabindex', '0');
+            card.setAttribute('aria-label', `Ver ${protocol.titulo}`);
+            card.dataset.key = key;
+            
+            const iconSrc = protocol.icono || 'https://cdn-icons-png.flaticon.com/512/3330/3330316.png';
+            const hasExternalLink = !!protocol.url_externa;
+            
+            card.innerHTML = `
+                <div class="icon-wrapper">
+                    <img src="${this.escapeHtml(iconSrc)}" alt="Icono" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📄</text></svg>'">
+                </div>
+                <h2>${this.escapeHtml(protocol.titulo.split(':')[0].substring(0, 50))}${protocol.titulo.length > 50 ? '...' : ''}</h2>
+                <p>${hasExternalLink ? 'Documento externo disponible en línea' : 'Protocolo institucional'}</p>
+                <button class="btn-premium">${hasExternalLink ? 'Ver Documento' : 'Acceder al Protocolo'}</button>
+            `;
+            
+            card.addEventListener('click', () => this.openProtocol(key));
+            card.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    this.openProtocol(key);
+                }
+            });
+            
+            this.ui.protocolContainer.appendChild(card);
+        });
+    },
+
+    bindEvents() {
+        document.getElementById('modal-close')?.addEventListener('click', () => this.closeModal());
+        
+        this.ui.modalOverlay.addEventListener('click', (e) => {
+            if (e.target === this.ui.modalOverlay) this.closeModal();
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.state.isModalOpen) this.closeModal();
+        });
+        
+        window.addEventListener('hashchange', () => this.updateURLFromHash());
+    },
+
+    updateURLFromHash() {
+        const hash = window.location.hash.slice(1);
+        if (hash && this.state.data && this.state.data[hash]) {
+            this.openProtocol(hash, false);
+        }
+    },
+
+    openProtocol(key, updateHash = true) {
+        if (!this.state.data || !this.state.data[key]) return;
+        
+        this.state.activeProtocolKey = key;
+        this.state.isModalOpen = true;
+        this.ui.modalOverlay.classList.add('active');
+        this.ui.body.style.overflow = 'hidden';
+        
+        if (updateHash) {
+            window.location.hash = key;
+        }
+        
+        this.renderProtocol();
+    },
+
+    closeModal() {
+        this.ui.modalOverlay.classList.remove('active');
+        this.ui.body.style.overflow = '';
+        this.state.isModalOpen = false;
+        
+        if (window.location.hash) {
+            history.pushState('', document.title, window.location.pathname + window.location.search);
+        }
+    },
+
+    getProtocolData() {
+        return this.state.data[this.state.activeProtocolKey];
+    },
+
+    renderProtocol() {
+        const data = this.getProtocolData();
+        if (!data) return;
+        
+        const paragraphs = data.contenido_completo;
+        const hasExternalLink = !!data.url_externa;
+
+        let htmlContent = '';
+        let tocHtml = '';
+        let indexCount = 0;
+
+        const titleRegex = /^[A-ZÁÉÍÓÚÑ\s]{4,}(\.|$|:)/;
+        const numberTitleRegex = /^[0-9]+(\.[0-9]+)*(\.|\.-|\s)/;
+        const letterRegex = /^[a-z]\)/i;
+        const dashRegex = /^-/;
+
+        paragraphs.forEach(para => {
+            const sanitizedText = this.escapeHtml(para).replace(/\\n/g, '<br>');
+
+            if (titleRegex.test(para) && para === para.toUpperCase() && para.length < 150) {
+                const id = `section-${indexCount++}`;
+                htmlContent += `<h2 id="${id}">${sanitizedText}</h2>`;
+                tocHtml += `<li><a href="#${id}" class="toc-link">${sanitizedText}</a></li>`;
+            } else if (numberTitleRegex.test(para)) {
+                const id = `section-${indexCount++}`;
+                htmlContent += `<h3 id="${id}">${sanitizedText}</h3>`;
+                tocHtml += `<li><a href="#${id}" class="toc-link toc-sublink">${sanitizedText}</a></li>`;
+            } else if (letterRegex.test(para) || dashRegex.test(para)) {
+                htmlContent += `<div class="indent-item">${sanitizedText}</div>`;
+            } else if (para.trim()) {
+                htmlContent += `<p>${sanitizedText}</p>`;
+            }
+        });
+
+        // Add index section if there are headings
+        let tocContainerHtml = '';
+        if (tocHtml) {
+            tocContainerHtml = `
+                <div class="toc-container" style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; border-left: 4px solid var(--secondary);">
+                    <h3 style="margin-top: 0; color: var(--text-dark);">Índice de Contenidos</h3>
+                    <ul style="list-style-type: none; padding-left: 0; margin-bottom: 0; max-height: 250px; overflow-y: auto; font-size: 0.95rem;">
+                        ${tocHtml}
+                    </ul>
+                </div>
+            `;
+        }
+
+        const externalLinkHtml = hasExternalLink ? `
+            <div style="margin-top: 2rem; padding: 1.5rem; background: #f0f9ff; border-radius: 12px; border-left: 4px solid var(--primary);">
+                <p style="margin: 0 0 1rem 0; font-weight: 600;">📎 Documento Original:</p>
+                <a href="${this.escapeHtml(data.url_externa)}" target="_blank" rel="noopener noreferrer" 
+                   style="display: inline-block; padding: 0.8rem 1.5rem; background: var(--primary); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                    Abrir documento oficial ↗
+                </a>
+            </div>
+        ` : '';
+
+        this.ui.modalContent.innerHTML = `
+            <div class="modal-header">
+                <span class="protocol-badge">${data.tipo === 'documento' ? 'Documento' : 'Protocolo'} Oficial</span>
+                <h1>${this.escapeHtml(data.titulo)}</h1>
+            </div>
+            <div class="modal-body document-view">
+                <div class="document-content">
+                    ${tocContainerHtml}
+                    ${htmlContent}
+                    ${externalLinkHtml}
+                </div>
+            </div>
+        `;
+        
+        this.ui.modalContent.querySelector('.modal-body').scrollTop = 0;
+
+        // Add smooth scrolling to TOC links
+        this.ui.modalContent.querySelectorAll('.toc-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = link.getAttribute('href').substring(1);
+                const targetElement = document.getElementById(targetId);
+                const modalBody = this.ui.modalContent.querySelector('.modal-body');
+                
+                if (targetElement && modalBody) {
+                    modalBody.scrollTo({
+                        top: targetElement.offsetTop - 20, // Add a little padding
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
     }
+};
 
-    html += `</div>`; // Close modal-body-scroll
-    
-    modalContent.innerHTML = html;
-    modalOverlay.classList.add('active');
-    document.body.style.overflow = 'hidden'; // Disable scroll on body
-}
-
-function closeModal() {
-    modalOverlay.classList.remove('active');
-    document.body.style.overflow = 'auto'; // Enable scroll on body
-}
-
-// Listeners
-document.getElementById('btn-telefonos').addEventListener('click', () => openModal('telefonos'));
-document.getElementById('btn-camaras').addEventListener('click', () => openModal('camaras'));
-modalClose.addEventListener('click', closeModal);
-modalOverlay.addEventListener('click', (e) => {
-    if (e.target === modalOverlay) closeModal();
-});
-
-loadData();
+window.ProtocolApp = ProtocolApp;
+document.addEventListener('DOMContentLoaded', () => ProtocolApp.init());

@@ -11,6 +11,22 @@ const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
 require('dotenv').config({ path: path.join(__dirname, '../rojo_comunicaciones/.env.pablo2010') });
+const { convertAndCleanDoc } = require('../limpieza_datos/skills/doc-legacy-cleaner/doc-converter');
+const { cleanDeep, removeHeaders } = require('../limpieza_datos/modules/docx-cleaner');
+
+const CACHE_FILE = path.join(__dirname, 'published_cache_1m.json');
+let publishedCache = [];
+if (fs.existsSync(CACHE_FILE)) {
+    try {
+        publishedCache = JSON.parse(fs.readFileSync(CACHE_FILE, 'utf8'));
+    } catch (e) { /* ignore parse error */ }
+}
+function addToCache(filePath) {
+    if (!publishedCache.includes(filePath)) {
+        publishedCache.push(filePath);
+        fs.writeFileSync(CACHE_FILE, JSON.stringify(publishedCache, null, 2));
+    }
+}
 
 // ============================================================
 // CONFIGURACIÓN DE ASIGNATURAS
@@ -60,6 +76,27 @@ const ASIGNATURAS = [
         paths: [path.join(BASE, 'CS NATURALES', 'FISICA')],
         tags: ['Física', 'Ciencias', '1° Medio', 'Planificación'],
     },
+    {
+        id: 'orientacion',
+        subject: 'Orientación',
+        emoji: '🧭',
+        paths: [path.join(BASE, 'ORIENTACION 1 md')],
+        tags: ['Orientación', '1° Medio', 'Planificación'],
+    },
+    {
+        id: 'tecnologia',
+        subject: 'Tecnología',
+        emoji: '🔧',
+        paths: [path.join(BASE, 'TECNOLOGICA')],
+        tags: ['Tecnología', '1° Medio', 'Planificación'],
+    },
+    {
+        id: 'visuales',
+        subject: 'Artes Visuales',
+        emoji: '🎨',
+        paths: [path.join(BASE, 'VISUALES')],
+        tags: ['Artes Visuales', '1° Medio', 'Planificación'],
+    },
 ];
 
 // Filtrar por argumento CLI
@@ -96,7 +133,7 @@ function _scanDir(dir, fileList) {
             const ext = path.extname(file).toLowerCase();
             const name = file.toUpperCase();
             if ((ext === '.docx' || ext === '.doc') &&
-                name.includes('PLANIFICACION') &&
+                (name.includes('PLANIFICACION') || name.includes('CLASE_A_CLASE')) &&
                 !name.includes('ANUAL') &&
                 !name.includes('~$')) {
 
@@ -282,20 +319,37 @@ async function fillForm(page, title, desc, tags) {
         for (const item of archivos) {
             console.log(`   📅 ${item.mes}${item.unidad} — ${item.name}`);
 
+            if (publishedCache.includes(item.path)) {
+                console.log(`      ⏭️ SALTANDO: Ya fue publicado anteriormente.`);
+                continue;
+            }
+
             let fileToUpload = item.path;
             const originalFile = item.path;
 
-            // Solo limpiar .docx (los .doc se suben tal cual)
-            if (item.ext === '.docx') {
+            // Procesar y Limpiar
+            if (item.ext === '.doc') {
                 try {
-                    const { cleanDeep, removeHeaders } = require('../limpieza_datos/modules/docx-cleaner');
-                    const cleanedPath = path.join(tempSubDir, `${path.basename(item.path, '.docx')}_LIMPIO.docx`);
+                    const res = await convertAndCleanDoc(item.path, tempSubDir);
+                    if (res.success) {
+                        fileToUpload = res.outputPath;
+                        console.log('      🪄 .doc convertido y limpiado a .docx');
+                    } else {
+                        console.log('      ⚠️ Falló conversión de .doc. Se subirá original.');
+                    }
+                } catch (e) {
+                    console.log(`      ⚠️ Error al convertir .doc: ${e.message}`);
+                }
+            } else if (item.ext === '.docx') {
+                try {
+                    let shortName = item.name.substring(0, 30).replace(/[^a-zA-Z0-9]/g, '_');
+                    const cleanedPath = path.join(tempSubDir, `${shortName}_TEMP.docx`);
                     await cleanDeep(item.path, cleanedPath);
                     await removeHeaders(cleanedPath, cleanedPath);
                     fileToUpload = cleanedPath;
                     console.log('      🧹 Limpiado OK');
                 } catch (e) {
-                    console.log(`      ⚠️ Limpieza falló, se usará original`);
+                    console.log(`      ⚠️ Limpieza falló, se usará original: ${e.message}`);
                 }
             }
 
@@ -342,6 +396,7 @@ async function fillForm(page, title, desc, tags) {
                 await page.waitForURL(/posts\/(\d+)/, { timeout: 60000 });
                 console.log(`      ✅ Publicado: ${page.url()}`);
                 ok++;
+                addToCache(item.path);
                 await page.waitForTimeout(2000);
             } catch (e) {
                 console.log(`      ❌ Error al publicar: ${e.message.substring(0, 100)}`);

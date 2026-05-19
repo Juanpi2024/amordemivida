@@ -31,19 +31,19 @@
 
 ---
 
-## 📋 PRÓXIMOS PASOS (Primero Medio — NUEVA CUENTA)
+## ✅ COMPLETADO (1° Medio) — CUENTA PABLO
 
-Se ha configurado la segunda cuenta (`profepablo2010@gmail.com`) y la nueva ruta base:
-`D:\Users\Pablo\Desktop\ESCRITORIO TRABAJO 2023\mi aula editado\ENSEÑANZA MEDIA\PRIMERO MEDIO`
-
-**Objetivo:** Publicar planificaciones mensuales limpias en esta nueva categoría.
-
-1. **Lenguaje 1° Medio** ✅ Completado
-2. **Matemática 1° Medio** 🚀 Publicando (Marzo en curso)
-3. **Historia 1° Medio** 🚀 Publicando (Marzo en curso)
-4. **Ciencias 1° Medio** (Biología, Química, Física)
-5. **Inglés 1° Medio**
-6. **Música/Artes/Ed. Física 1° Medio**
+| Asignatura | Estado |
+|---|---|
+| Lenguaje y Comunicación | ✅ Completado |
+| Matemática | ✅ Completado |
+| Historia y Geografía | ✅ Completado (Incluye CLASE_A_CLASE) |
+| Ciencias (Bio, Quim, Fis) | ✅ Completado |
+| Inglés | ✅ Completado |
+| Orientación | ✅ Completado |
+| Tecnología | ✅ Completado |
+| Artes Visuales | ✅ Completado |
+| Religión | ✅ Completado |
 
 ---
 

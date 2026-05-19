@@ -275,9 +275,39 @@ function isLegacyDoc(filePath) {
     }
 }
 
+/**
+ * Convierte un archivo HTML a .docx usando LibreOffice modo headless.
+ */
+function convertHtmlToDocx(inputPath, outputDir, sofficePath) {
+    if (!sofficePath) sofficePath = findLibreOffice();
+    if (!sofficePath) return { success: false, error: 'LibreOffice no encontrado' };
+
+    const result = spawnSync(sofficePath, [
+        '--headless',
+        '--convert-to', 'docx',
+        '--outdir', outputDir,
+        inputPath
+    ], {
+        timeout: CONVERSION_TIMEOUT_MS,
+        encoding: 'utf8'
+    });
+
+    if (result.status !== 0) {
+        return { success: false, error: result.stderr || 'Error en LibreOffice' };
+    }
+
+    const baseName = path.basename(inputPath, path.extname(inputPath));
+    const convertedPath = path.join(outputDir, `${baseName}.docx`);
+
+    return fs.existsSync(convertedPath) 
+        ? { success: true, outputPath: convertedPath }
+        : { success: false, error: 'Archivo no generado' };
+}
+
 module.exports = {
     convertAndCleanDoc,
     convertDocToDocx,
     findLibreOffice,
-    isLegacyDoc
+    isLegacyDoc,
+    convertHtmlToDocx
 };

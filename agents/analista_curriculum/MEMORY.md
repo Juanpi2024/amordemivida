@@ -16,6 +16,7 @@
 - [x] Identificar unidades con 0 material (Lenguaje 1° Medio escaneado).
 - [x] **Hito 02/02:** Cubierta brecha de "Noticias" en 1° Medio con versión DUA/Ciudadana.
 - [!] **Regla Maestra:** Los archivos "PLANIFICACION" se derivan automáticamente al **Agente Custodio** para limpieza de metadatos.
+- [❌] **ERROR GRAVE AGENTE (29/03/2026):** No se debe permitir nunca el "fallback a carpeta GENERAL" de forma automática cuando falla la API (429/404). Esto genera carpetas inútiles y desorden. El agente debe reintentar con backoff o detenerse, pero nunca botar material a GENERAL si el error es técnico.
 
 ---
 

@@ -155,23 +155,28 @@ async function cleanDeep(inputPath, outputPath = null) {
         outputPath = path.join(dir, newName);
     }
 
+    let workPath = outputPath;
+    fs.copyFileSync(inputPath, workPath);
+
     // Normalizar ZIP antes de procesar para evitar "No descriptor present"
     try {
-        const zipTmpPath = inputPath + '.repair.zip';
-        const zipInPath = inputPath + '.in.zip';
-        fs.copyFileSync(inputPath, zipInPath);
-        const tempUnzip = path.join(path.dirname(inputPath), '_tmp_clean_' + Date.now());
+        const baseDir = path.dirname(workPath);
+        const randId = Date.now() + '_' + Math.floor(Math.random() * 1000);
+        const zipTmpPath = path.join(baseDir, `repair_${randId}.zip`);
+        const zipInPath = path.join(baseDir, `in_${randId}.zip`);
+        fs.copyFileSync(workPath, zipInPath);
+        const tempUnzip = path.join(baseDir, `_tmp_clean_${randId}`);
         // Expandir y re-comprimir como .zip, luego renombrar a .docx
         const psCmd = `powershell -Command "Expand-Archive -Path '${zipInPath}' -DestinationPath '${tempUnzip}' -Force; Compress-Archive -Path '${tempUnzip}/*' -DestinationPath '${zipTmpPath}' -Force; Remove-Item -Path '${tempUnzip}' -Recurse -Force; Remove-Item -Path '${zipInPath}' -Force"`;
         require('child_process').execSync(psCmd);
         if (fs.existsSync(zipTmpPath)) {
-            fs.copyFileSync(zipTmpPath, inputPath);
+            fs.copyFileSync(zipTmpPath, workPath);
             fs.unlinkSync(zipTmpPath);
         }
     } catch (e) { /* silent fail, attempt direct */ }
 
     try {
-        const zip = new AdmZip(fs.readFileSync(inputPath));
+        const zip = new AdmZip(fs.readFileSync(workPath));
         let cleaned = [];
 
         // 1. Propiedades del documento e información personal (core.xml)
@@ -310,22 +315,29 @@ async function replaceText(inputPath, searchValue, replaceValue, outputPath = nu
         outputPath = path.join(dir, `${name}_REPLACED.docx`);
     }
 
+    let workPath = outputPath;
+    if (inputPath !== workPath) {
+        fs.copyFileSync(inputPath, workPath);
+    }
+
     // Normalizar ZIP antes de procesar
     try {
-        const zipTmpPath = inputPath + '.repair_r.zip';
-        const zipInPath = inputPath + '.rin.zip';
-        fs.copyFileSync(inputPath, zipInPath);
-        const tempUnzip = path.join(path.dirname(inputPath), '_tmp_rep_' + Date.now());
+        const baseDir = path.dirname(workPath);
+        const randId = Date.now() + '_' + Math.floor(Math.random() * 1000);
+        const zipTmpPath = path.join(baseDir, `repair_r_${randId}.zip`);
+        const zipInPath = path.join(baseDir, `rin_${randId}.zip`);
+        fs.copyFileSync(workPath, zipInPath);
+        const tempUnzip = path.join(baseDir, `_tmp_rep_${randId}`);
         const psCmd = `powershell -Command "Expand-Archive -Path '${zipInPath}' -DestinationPath '${tempUnzip}' -Force; Compress-Archive -Path '${tempUnzip}/*' -DestinationPath '${zipTmpPath}' -Force; Remove-Item -Path '${tempUnzip}' -Recurse -Force; Remove-Item -Path '${zipInPath}' -Force"`;
         require('child_process').execSync(psCmd);
         if (fs.existsSync(zipTmpPath)) {
-            fs.copyFileSync(zipTmpPath, inputPath);
+            fs.copyFileSync(zipTmpPath, workPath);
             fs.unlinkSync(zipTmpPath);
         }
     } catch (e) { /* silent fail */ }
 
     try {
-        const zip = new AdmZip(fs.readFileSync(inputPath));
+        const zip = new AdmZip(fs.readFileSync(workPath));
         let modifiedCount = 0;
 
         // Archivos XML a procesar

@@ -21,17 +21,20 @@ import {
   Wheat,
   Users,
   AlertTriangle,
+  Copy,
+  Check,
 } from 'lucide-react';
 import InstructionsPanel from '@/components/InstructionsPanel';
 import GrimoireModal from '@/components/GrimoireModal';
+import { MANUAL_DATOS } from '@/data/manual';
 
 const getRoleIcon = (role: string, size = 'w-5 h-5') => {
   const r = role.toLowerCase();
-  if (r.includes('comunic') || r.includes('chat') || r.includes('mago')) return <Wand2 className={`${size} text-wc3-blue`} />;
-  if (r.includes('asistente') || r.includes('personal') || r.includes('defens')) return <Shield className={`${size} text-wc3-green`} />;
-  if (r.includes('dev') || r.includes('code') || r.includes('guerr')) return <Sword className={`${size} text-wc3-red`} />;
+  if (r.includes('comunic') || r.includes('chat') || r.includes('mago') || r.includes('propaganda') || r.includes('public')) return <Wand2 className={`${size} text-wc3-blue`} />;
+  if (r.includes('asistente') || r.includes('personal') || r.includes('defens') || r.includes('inbox') || r.includes('crm') || r.includes('soporte')) return <Shield className={`${size} text-wc3-green`} />;
+  if (r.includes('dev') || r.includes('code') || r.includes('guerr') || r.includes('present') || r.includes('powerpoint')) return <Sword className={`${size} text-wc3-red`} />;
   if (r.includes('db') || r.includes('data') || r.includes('anal')) return <Database className={`${size} text-wc3-blue`} />;
-  if (r.includes('financi') || r.includes('gestor')) return <Gem className={`${size} text-wc3-gold`} />;
+  if (r.includes('financi') || r.includes('gestor') || r.includes('contad')) return <Gem className={`${size} text-wc3-gold`} />;
   return <Cpu className={`${size} text-wc3-gold`} />;
 };
 
@@ -48,6 +51,7 @@ export default function Home() {
   const [isInstructionsOpen, setIsInstructionsOpen] = React.useState(false);
   const [isGrimoireOpen, setIsGrimoireOpen] = React.useState(false);
   const [selectedAgent, setSelectedAgent] = React.useState<string | null>(null);
+  const [sidebarCopied, setSidebarCopied] = React.useState<'prompt' | 'cmd' | null>(null);
 
   // Simulated day/night cycle based on real time
   const hour = new Date().getHours();
@@ -169,23 +173,77 @@ export default function Home() {
             if (!agent) return null;
             const sc = getStatusColor(agent.status);
             const lastTime = agent.lastActive ? new Date(agent.lastActive).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+            
+            // Match with manual details
+            const manualAgent = MANUAL_DATOS.capacidades_agentes.find(ag => ag.path.includes(agent.id));
+
+            const copyToSidebar = (text: string, type: 'prompt' | 'cmd') => {
+              navigator.clipboard.writeText(text);
+              setSidebarCopied(type);
+              setTimeout(() => setSidebarCopied(null), 2000);
+            };
+
             return (
-              <div className="px-4 py-3 border-t border-wc3-gold-dark/20 bg-wc3-stone-dark/50 space-y-2">
+              <div className="px-4 py-3.5 border-t border-wc3-gold-dark/20 bg-wc3-stone-dark/70 space-y-3 shrink-0">
+                {/* Portrait & Role */}
                 <div className="flex items-center gap-2">
                   <div className={`w-8 h-8 rounded border-2 flex items-center justify-center bg-wc3-stone-dark ${sc.ring}`}>
                     {getRoleIcon(agent.role, 'w-4 h-4')}
                   </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-wc3-gold uppercase" style={{ fontFamily: 'var(--font-cinzel)' }}>{agent.name.replace(/_/g, ' ')}</p>
-                    <p className="text-[9px] text-wc3-text-dim">{sc.label}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-bold text-wc3-gold uppercase truncate" style={{ fontFamily: 'var(--font-cinzel), Cinzel, serif' }}>
+                      {agent.name.replace(/_/g, ' ')}
+                    </p>
+                    <p className="text-[8px] text-wc3-text-dim uppercase tracking-wider">
+                      {manualAgent?.clase || agent.role}
+                    </p>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-1 text-[9px]">
+
+                {/* Description */}
+                {manualAgent && (
+                  <p className="text-[9px] text-wc3-text leading-relaxed bg-black/30 p-2 rounded border border-wc3-gold-dark/5">
+                    {manualAgent.descripcion}
+                  </p>
+                )}
+
+                {/* Stats */}
+                <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[9px] border-b border-wc3-gold-dark/10 pb-2">
+                  <div className="text-wc3-text-dim">Estado:</div>
+                  <div className={`text-right font-bold ${sc.dot.replace('bg-', 'text-')}`}>{sc.label}</div>
                   <div className="text-wc3-text-dim">Última señal:</div>
                   <div className="text-wc3-gold text-right">{lastTime}</div>
                   <div className="text-wc3-text-dim">Nivel:</div>
                   <div className="text-wc3-gold text-right">{Math.abs(agent.name.length * 7 % 60) + 1}</div>
                 </div>
+
+                {/* Quick copy buttons */}
+                {manualAgent && (
+                  <div className="space-y-1.5 pt-0.5">
+                    <button
+                      onClick={() => copyToSidebar(manualAgent.prompt, 'prompt')}
+                      className="w-full text-left px-2 py-1.5 text-[8px] text-wc3-text hover:text-wc3-gold flex items-center justify-between rounded bg-wc3-panel border border-wc3-gold-dark/20 hover:border-wc3-gold transition-all"
+                    >
+                      <span className="truncate pr-1">🔮 Invocación: "{manualAgent.prompt}"</span>
+                      {sidebarCopied === 'prompt' ? (
+                        <Check className="w-3 h-3 text-wc3-green shrink-0" />
+                      ) : (
+                        <Copy className="w-2.5 h-2.5 shrink-0" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => copyToSidebar(manualAgent.comando, 'cmd')}
+                      className="w-full text-left px-2 py-1.5 text-[8px] text-wc3-text hover:text-wc3-gold flex items-center justify-between rounded bg-wc3-panel border border-wc3-gold-dark/20 hover:border-wc3-gold transition-all font-mono"
+                    >
+                      <span className="truncate pr-1">💻 {manualAgent.comando}</span>
+                      {sidebarCopied === 'cmd' ? (
+                        <Check className="w-3 h-3 text-wc3-green shrink-0" />
+                      ) : (
+                        <Copy className="w-2.5 h-2.5 shrink-0" />
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
             );
           })()}

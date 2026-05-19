@@ -111,3 +111,8 @@ styles_raw.xml
 # Contactos y base de datos locales
 contacts.json
 whatsapp_contacts.json
+
+# Browser profile sessions
+fb_session/
+ig_session/
+*.html
